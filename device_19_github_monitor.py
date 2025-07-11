@@ -35,11 +35,12 @@ ALERT_EMAIL = os.getenv('ALERT_EMAIL', 'aghosh09092004@gmail.com')  # Email to r
 
 # Connection string for Ubuntu/Linux
 conn_str = (
-    'DRIVER={ODBC Driver 17 for SQL Server};'
+    'DRIVER={ODBC Driver 18 for SQL Server};'
     f'SERVER={DB_SERVER};'
     f'DATABASE={DB_DATABASE};'
     f'UID={DB_USERNAME};'
     f'PWD={DB_PASSWORD};'
+    'TrustServerCertificate=yes;'
 )
 
 # Employee configuration
