@@ -1,5 +1,5 @@
 [start]
-cmd = "python railway_simple.py"
+cmd = "python railway_nopandas.py"
 
 [variables]
 PYTHON_VERSION = "3.9"

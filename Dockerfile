@@ -20,4 +20,4 @@ COPY . .
 EXPOSE 8000
 
 # Run the simplified application
-CMD ["python", "railway_simple.py"]
+CMD ["python", "railway_nopandas.py"]
