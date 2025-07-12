@@ -1,1 +1,1 @@
-web: python railway_monitor.py
+web: python railway_simple.py

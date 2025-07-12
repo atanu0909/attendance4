@@ -11,3 +11,26 @@
 2025-07-11 23:52:16,204 - INFO - ================================================================================
 2025-07-11 23:52:16,204 - INFO - SUMMARY: 8/8 punched in, 6 late
 2025-07-11 23:52:16,204 - INFO - ================================================================================
+2025-07-12 10:46:55,897 - INFO - Available ODBC drivers: ['SQL Server', 'Oracle in XE', 'Microsoft Access Driver (*.mdb, *.accdb)', 'Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)', 'Microsoft Access Text Driver (*.txt, *.csv)', 'Microsoft Access dBASE Driver (*.dbf, *.ndx, *.mdx)']
+2025-07-12 10:46:55,897 - INFO - Skipping ODBC Driver 18 - No Encryption - driver not available
+2025-07-12 10:46:55,902 - INFO - Skipping ODBC Driver 17 - No Encryption - driver not available
+2025-07-12 10:46:55,902 - INFO - Skipping ODBC Driver 17 - Standard - driver not available
+2025-07-12 10:46:55,902 - INFO - Testing SQL Server Native Client...
+2025-07-12 10:46:56,213 - INFO - Using ODBC connection string: DRIVER={SQL Server};SERVER=1.22.45.168,19471;DATABASE=etimetrackliteWEB;UID=sa;PWD=***;Connection Timeout=30;
+2025-07-12 10:48:45,552 - INFO - Available ODBC drivers: ['SQL Server', 'Oracle in XE', 'Microsoft Access Driver (*.mdb, *.accdb)', 'Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)', 'Microsoft Access Text Driver (*.txt, *.csv)', 'Microsoft Access dBASE Driver (*.dbf, *.ndx, *.mdx)']
+2025-07-12 10:48:45,552 - INFO - Skipping ODBC Driver 18 - No Encryption - driver not available
+2025-07-12 10:48:45,552 - INFO - Skipping ODBC Driver 17 - No Encryption - driver not available
+2025-07-12 10:48:45,552 - INFO - Skipping ODBC Driver 17 - Standard - driver not available
+2025-07-12 10:48:45,552 - INFO - Testing SQL Server Native Client...
+2025-07-12 10:48:45,642 - INFO - Using ODBC connection string: DRIVER={SQL Server};SERVER=1.22.45.168,19471;DATABASE=etimetrackliteWEB;UID=sa;PWD=***;Connection Timeout=30;
+2025-07-12 10:52:04,777 - INFO - Available ODBC drivers: ['SQL Server', 'Oracle in XE', 'Microsoft Access Driver (*.mdb, *.accdb)', 'Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)', 'Microsoft Access Text Driver (*.txt, *.csv)', 'Microsoft Access dBASE Driver (*.dbf, *.ndx, *.mdx)']
+2025-07-12 10:52:04,777 - INFO - Skipping ODBC Driver 18 - No Encryption - driver not available
+2025-07-12 10:52:04,777 - INFO - Skipping ODBC Driver 17 - No Encryption - driver not available
+2025-07-12 10:52:04,777 - INFO - Skipping ODBC Driver 17 - Standard - driver not available
+2025-07-12 10:52:04,777 - INFO - Testing SQL Server Native Client...
+2025-07-12 10:52:04,898 - INFO - Using ODBC connection string: DRIVER={SQL Server};SERVER=1.22.45.168,19471;DATABASE=etimetrackliteWEB;UID=sa;PWD=***;Connection Timeout=30;
+2025-07-12 10:52:04,916 - INFO - Available ODBC drivers: ['SQL Server', 'Oracle in XE', 'Microsoft Access Driver (*.mdb, *.accdb)', 'Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)', 'Microsoft Access Text Driver (*.txt, *.csv)', 'Microsoft Access dBASE Driver (*.dbf, *.ndx, *.mdx)']
+2025-07-12 10:52:04,918 - INFO - Skipping ODBC Driver 18 - No Encryption - driver not available
+2025-07-12 10:52:04,918 - INFO - Skipping ODBC Driver 17 - No Encryption - driver not available
+2025-07-12 10:52:04,918 - INFO - Skipping ODBC Driver 17 - Standard - driver not available
+2025-07-12 10:52:04,920 - INFO - Testing SQL Server Native Client...
