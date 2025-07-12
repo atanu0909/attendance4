@@ -36,16 +36,16 @@ GMAIL_PASSWORD = os.getenv('GMAIL_PASSWORD', 'oqahvqkuaziufvfb')
 COMPANY_NAME = os.getenv('COMPANY_NAME', 'Stylo Media Pvt Ltd')
 ALERT_EMAIL = os.getenv('ALERT_EMAIL', 'aghosh09092004@gmail.com')
 
-# Employee configuration
+# Employee configuration - UPDATED WITH ACTUAL SHIFT TIMES FROM DATABASE
 EMPLOYEES_TO_MONITOR = [
-    {'code': '3', 'name': 'Swarup Mahapatra', 'machine': 'Ryobi 3', 'expected_in': '09:00:00'},
-    {'code': '595', 'name': 'Santanu Das', 'machine': 'Ryobi 3', 'expected_in': '07:00:00'},
-    {'code': '593', 'name': 'Rohit Kabiraj', 'machine': 'Ryobi 3', 'expected_in': '07:00:00'},
+    {'code': '3', 'name': 'Swarup Mahapatra', 'machine': 'Ryobi 3', 'expected_in': '09:30:00'},
+    {'code': '595', 'name': 'Santanu Das', 'machine': 'Ryobi 3', 'expected_in': '09:00:00'},
+    {'code': '593', 'name': 'Rohit Kabiraj', 'machine': 'Ryobi 3', 'expected_in': '09:00:00'},
     {'code': '695', 'name': 'Soumen Ghoshal', 'machine': 'Ryobi 2', 'expected_in': '09:00:00'},
-    {'code': '641', 'name': 'Souvik Ghosh', 'machine': 'Ryobi 2', 'expected_in': '07:00:00'},
-    {'code': '744', 'name': 'Manoj Maity', 'machine': 'Ryobi 2', 'expected_in': '07:00:00'},
-    {'code': '20', 'name': 'Bablu Rajak', 'machine': 'Flat Bed', 'expected_in': '07:00:00'},
-    {'code': '18', 'name': 'Somen Bhattacharjee', 'machine': 'Flat Bed', 'expected_in': '07:00:00'}
+    {'code': '641', 'name': 'Souvik Ghosh', 'machine': 'Ryobi 2', 'expected_in': '08:30:00'},
+    {'code': '744', 'name': 'Manoj Maity', 'machine': 'Ryobi 2', 'expected_in': '08:30:00'},
+    {'code': '20', 'name': 'Bablu Rajak', 'machine': 'Flat Bed', 'expected_in': '09:30:00'},
+    {'code': '18', 'name': 'Somen Bhattacharjee', 'machine': 'Flat Bed', 'expected_in': '09:00:00'}
 ]
 
 def get_db_connection():
