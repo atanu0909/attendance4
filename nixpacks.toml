@@ -1,0 +1,5 @@
+[start]
+cmd = "python railway_simple.py"
+
+[variables]
+PYTHON_VERSION = "3.9"
