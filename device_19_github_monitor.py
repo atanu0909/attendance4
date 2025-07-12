@@ -9,6 +9,13 @@ from email.mime.multipart import MIMEMultipart
 import json
 import sys
 
+# Try to import pymssql as fallback
+try:
+    import pymssql
+    PYMSSQL_AVAILABLE = True
+except ImportError:
+    PYMSSQL_AVAILABLE = False
+
 # Setup logging for GitHub Actions
 logging.basicConfig(
     level=logging.INFO,
@@ -33,6 +40,35 @@ GMAIL_PASSWORD = os.getenv('GMAIL_PASSWORD', 'oqahvqkuaziufvfb')
 COMPANY_NAME = os.getenv('COMPANY_NAME', 'Stylo Media Pvt Ltd')
 ALERT_EMAIL = os.getenv('ALERT_EMAIL', 'aghosh09092004@gmail.com')  # Email to receive alerts
 
+def get_pymssql_connection():
+    """Try to connect using pymssql as a fallback"""
+    if not PYMSSQL_AVAILABLE:
+        logger.info("pymssql not available, skipping")
+        return None
+        
+    try:
+        logger.info("Trying pymssql connection...")
+        # Extract server and port from DB_SERVER
+        server_parts = DB_SERVER.split(',')
+        server = server_parts[0]
+        port = int(server_parts[1]) if len(server_parts) > 1 else 1433
+        
+        conn = pymssql.connect(
+            server=server,
+            port=port,
+            user=DB_USERNAME,
+            password=DB_PASSWORD,
+            database=DB_DATABASE,
+            timeout=30,
+            login_timeout=30,
+            as_dict=True
+        )
+        logger.info("✅ pymssql connection successful!")
+        return conn
+    except Exception as e:
+        logger.warning(f"❌ pymssql connection failed: {str(e)}")
+        return None
+
 # Function to get working ODBC connection string
 def get_working_connection_string():
     """Try different ODBC drivers and configurations to find one that works"""
@@ -44,22 +80,27 @@ def get_working_connection_string():
         {
             'name': 'ODBC Driver 18 - No Encryption',
             'driver': 'ODBC Driver 18 for SQL Server',
-            'extra_params': 'TrustServerCertificate=yes;Encrypt=no;'
+            'extra_params': 'TrustServerCertificate=yes;Encrypt=no;Connection Timeout=30;'
+        },
+        {
+            'name': 'ODBC Driver 17 - No Encryption',
+            'driver': 'ODBC Driver 17 for SQL Server',
+            'extra_params': 'TrustServerCertificate=yes;Encrypt=no;Connection Timeout=30;'
         },
         {
             'name': 'ODBC Driver 17 - Standard',
             'driver': 'ODBC Driver 17 for SQL Server',
-            'extra_params': 'TrustServerCertificate=yes;'
-        },
-        {
-            'name': 'ODBC Driver 17 - No SSL',
-            'driver': 'ODBC Driver 17 for SQL Server',
-            'extra_params': ''
+            'extra_params': 'TrustServerCertificate=yes;Connection Timeout=30;'
         },
         {
             'name': 'SQL Server Native Client',
             'driver': 'SQL Server',
-            'extra_params': ''
+            'extra_params': 'Connection Timeout=30;'
+        },
+        {
+            'name': 'FreeTDS',
+            'driver': 'FreeTDS',
+            'extra_params': 'TDS_Version=8.0;Port=19471;Connection Timeout=30;'
         }
     ]
     
@@ -95,10 +136,19 @@ def get_working_connection_string():
 # Get working connection string
 try:
     conn_str = get_working_connection_string()
-    logger.info(f"Using connection string: {conn_str.replace(DB_PASSWORD, '***')}")
+    logger.info(f"Using ODBC connection string: {conn_str.replace(DB_PASSWORD, '***')}")
 except Exception as e:
-    logger.error(f"Failed to establish database connection: {e}")
-    raise
+    logger.error(f"Failed to establish ODBC connection: {e}")
+    logger.info("Trying pymssql as fallback...")
+    
+    # Try pymssql as fallback
+    pymssql_conn = get_pymssql_connection()
+    if pymssql_conn:
+        logger.info("Using pymssql connection")
+        conn_str = None  # Will use pymssql_conn instead
+    else:
+        logger.error("All connection methods failed!")
+        raise Exception("Could not establish database connection with any method")
 
 # Employee configuration
 EMPLOYEES_TO_MONITOR = [

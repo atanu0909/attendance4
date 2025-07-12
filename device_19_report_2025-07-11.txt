@@ -1,0 +1,42 @@
+DEVICE 19 ATTENDANCE REPORT - 2025-07-11
+============================================================
+
+Code: 3    | Name: Swarup Mahapatra         
+Machine: Ryobi 3         | Expected: 09:00:00
+Actual IN: 09:44:24   | Status: Late by 00:44
+------------------------------------------------------------
+Code: 595  | Name: Santanu Das              
+Machine: Ryobi 3         | Expected: 07:00:00
+Actual IN: 07:08:43   | Status: Late by 00:08
+------------------------------------------------------------
+Code: 593  | Name: Rohit Kabiraj            
+Machine: Ryobi 3         | Expected: 07:00:00
+Actual IN: 07:01:11   | Status: Late by 00:01
+------------------------------------------------------------
+Code: 695  | Name: Soumen Ghoshal           
+Machine: Ryobi 2         | Expected: 09:00:00
+Actual IN: 09:07:07   | Status: Late by 00:07
+------------------------------------------------------------
+Code: 641  | Name: Souvik Ghosh             
+Machine: Ryobi 2         | Expected: 07:00:00
+Actual IN: 00:00:41   | Status: Early by 06:59
+------------------------------------------------------------
+Code: 744  | Name: Manoj Maity              
+Machine: Ryobi 2         | Expected: 07:00:00
+Actual IN: 00:00:53   | Status: Early by 06:59
+------------------------------------------------------------
+Code: 20   | Name: Bablu Rajak              
+Machine: Flat Bed        | Expected: 07:00:00
+Actual IN: 07:02:23   | Status: Late by 00:02
+------------------------------------------------------------
+Code: 18   | Name: Somen Bhattacharjee      
+Machine: Flat Bed        | Expected: 07:00:00
+Actual IN: 07:03:14   | Status: Late by 00:03
+------------------------------------------------------------
+
+SUMMARY:
+Total employees monitored: 8
+Employees punched in: 8
+Late employees: 6
+On-time/Early employees: 2
+Not punched in: 0

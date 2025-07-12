@@ -1,0 +1,11 @@
+ODBC Driver Test Results
+==============================
+Available drivers: SQL Server, Oracle in XE, Microsoft Access Driver (*.mdb, *.accdb), Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb), Microsoft Access Text Driver (*.txt, *.csv), Microsoft Access dBASE Driver (*.dbf, *.ndx, *.mdx)
+
+SUCCESS - Successful configurations:
+1. SQL Server Native Client
+   Driver: SQL Server
+   Extra params: 
+
+RECOMMENDED_DRIVER=SQL Server
+RECOMMENDED_EXTRA_PARAMS=

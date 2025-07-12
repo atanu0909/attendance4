@@ -1,0 +1,13 @@
+2025-07-11 23:51:52,312 - INFO - Available ODBC drivers: ['SQL Server', 'Oracle in XE', 'Microsoft Access Driver (*.mdb, *.accdb)', 'Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)', 'Microsoft Access Text Driver (*.txt, *.csv)', 'Microsoft Access dBASE Driver (*.dbf, *.ndx, *.mdx)']
+2025-07-11 23:51:52,312 - INFO - Skipping ODBC Driver 18 - No Encryption - driver not available
+2025-07-11 23:51:52,312 - INFO - Skipping ODBC Driver 17 - Standard - driver not available
+2025-07-11 23:51:52,312 - INFO - Skipping ODBC Driver 17 - No SSL - driver not available
+2025-07-11 23:51:52,312 - INFO - Testing SQL Server Native Client...
+2025-07-11 23:51:52,625 - INFO - Using connection string: DRIVER={SQL Server};SERVER=1.22.45.168,19471;DATABASE=etimetrackliteWEB;UID=sa;PWD=***;
+2025-07-11 23:51:52,632 - INFO - Checking Device 19 attendance for 2025-07-11
+2025-07-11 23:52:16,199 - INFO - ================================================================================
+2025-07-11 23:52:16,199 - INFO - DEVICE 19 ATTENDANCE REPORT - 2025-07-11
+2025-07-11 23:52:16,199 - INFO - ================================================================================
+2025-07-11 23:52:16,204 - INFO - ================================================================================
+2025-07-11 23:52:16,204 - INFO - SUMMARY: 8/8 punched in, 6 late
+2025-07-11 23:52:16,204 - INFO - ================================================================================

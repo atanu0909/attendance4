@@ -31,27 +31,32 @@ def test_odbc_drivers():
         {
             'name': 'ODBC Driver 18 - No Encryption',
             'driver': 'ODBC Driver 18 for SQL Server',
-            'extra_params': 'TrustServerCertificate=yes;Encrypt=no;'
+            'extra_params': 'TrustServerCertificate=yes;Encrypt=no;Connection Timeout=30;'
+        },
+        {
+            'name': 'ODBC Driver 17 - No Encryption',
+            'driver': 'ODBC Driver 17 for SQL Server',
+            'extra_params': 'TrustServerCertificate=yes;Encrypt=no;Connection Timeout=30;'
         },
         {
             'name': 'ODBC Driver 18 - Standard',
             'driver': 'ODBC Driver 18 for SQL Server',
-            'extra_params': 'TrustServerCertificate=yes;Encrypt=yes;'
+            'extra_params': 'TrustServerCertificate=yes;Encrypt=yes;Connection Timeout=30;'
         },
         {
             'name': 'ODBC Driver 17 - Standard',
             'driver': 'ODBC Driver 17 for SQL Server',
-            'extra_params': 'TrustServerCertificate=yes;'
-        },
-        {
-            'name': 'ODBC Driver 17 - No SSL',
-            'driver': 'ODBC Driver 17 for SQL Server',
-            'extra_params': ''
+            'extra_params': 'TrustServerCertificate=yes;Connection Timeout=30;'
         },
         {
             'name': 'SQL Server Native Client',
             'driver': 'SQL Server',
-            'extra_params': ''
+            'extra_params': 'Connection Timeout=30;'
+        },
+        {
+            'name': 'FreeTDS',
+            'driver': 'FreeTDS',
+            'extra_params': 'TDS_Version=8.0;Port=19471;Connection Timeout=30;'
         }
     ]
     
