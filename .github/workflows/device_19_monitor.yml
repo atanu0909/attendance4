@@ -26,11 +26,34 @@ jobs:
         
     - name: Install SQL Server ODBC Driver (Ubuntu)
       run: |
+        echo "Installing Microsoft ODBC drivers..."
         curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
         curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
         sudo apt-get update
-        sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
+        
+        # Install ODBC Driver 17 first (more stable)
+        echo "Installing ODBC Driver 17..."
+        sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17 || echo "ODBC Driver 17 installation failed"
+        
+        # Try to install ODBC Driver 18 as well
+        echo "Installing ODBC Driver 18..."
+        sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 || echo "ODBC Driver 18 installation failed"
+        
+        # Install development tools
         sudo apt-get install -y unixodbc-dev
+        
+        # List installed drivers
+        echo "Listing available ODBC drivers:"
+        odbcinst -q -d
+        
+    - name: Test ODBC Drivers
+      env:
+        DB_SERVER: ${{ secrets.DB_SERVER }}
+        DB_DATABASE: ${{ secrets.DB_DATABASE }}
+        DB_USERNAME: ${{ secrets.DB_USERNAME }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      run: |
+        python test_odbc_drivers.py
         
     - name: Run Device 19 Attendance Monitor
       env:

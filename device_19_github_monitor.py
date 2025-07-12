@@ -33,15 +33,72 @@ GMAIL_PASSWORD = os.getenv('GMAIL_PASSWORD', 'oqahvqkuaziufvfb')
 COMPANY_NAME = os.getenv('COMPANY_NAME', 'Stylo Media Pvt Ltd')
 ALERT_EMAIL = os.getenv('ALERT_EMAIL', 'aghosh09092004@gmail.com')  # Email to receive alerts
 
-# Connection string for Ubuntu/Linux
-conn_str = (
-    'DRIVER={ODBC Driver 18 for SQL Server};'
-    f'SERVER={DB_SERVER};'
-    f'DATABASE={DB_DATABASE};'
-    f'UID={DB_USERNAME};'
-    f'PWD={DB_PASSWORD};'
-    'TrustServerCertificate=yes;'
-)
+# Function to get working ODBC connection string
+def get_working_connection_string():
+    """Try different ODBC drivers and configurations to find one that works"""
+    drivers = [x for x in pyodbc.drivers()]
+    logger.info(f"Available ODBC drivers: {drivers}")
+    
+    # Test different driver configurations in order of preference
+    test_configs = [
+        {
+            'name': 'ODBC Driver 18 - No Encryption',
+            'driver': 'ODBC Driver 18 for SQL Server',
+            'extra_params': 'TrustServerCertificate=yes;Encrypt=no;'
+        },
+        {
+            'name': 'ODBC Driver 17 - Standard',
+            'driver': 'ODBC Driver 17 for SQL Server',
+            'extra_params': 'TrustServerCertificate=yes;'
+        },
+        {
+            'name': 'ODBC Driver 17 - No SSL',
+            'driver': 'ODBC Driver 17 for SQL Server',
+            'extra_params': ''
+        },
+        {
+            'name': 'SQL Server Native Client',
+            'driver': 'SQL Server',
+            'extra_params': ''
+        }
+    ]
+    
+    for config in test_configs:
+        if config['driver'] not in drivers:
+            logger.info(f"Skipping {config['name']} - driver not available")
+            continue
+            
+        try:
+            conn_str = (
+                f"DRIVER={{{config['driver']}}};"
+                f"SERVER={DB_SERVER};"
+                f"DATABASE={DB_DATABASE};"
+                f"UID={DB_USERNAME};"
+                f"PWD={DB_PASSWORD};"
+                f"{config['extra_params']}"
+            )
+            
+            logger.info(f"Testing {config['name']}...")
+            # Test the connection
+            with pyodbc.connect(conn_str, timeout=10) as test_conn:
+                cursor = test_conn.cursor()
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+                logger.info(f"✅ {config['name']} - Connection successful!")
+                return conn_str
+                
+        except Exception as e:
+            logger.warning(f"❌ {config['name']} - Failed: {str(e)}")
+    
+    raise Exception("No working ODBC driver configuration found!")
+
+# Get working connection string
+try:
+    conn_str = get_working_connection_string()
+    logger.info(f"Using connection string: {conn_str.replace(DB_PASSWORD, '***')}")
+except Exception as e:
+    logger.error(f"Failed to establish database connection: {e}")
+    raise
 
 # Employee configuration
 EMPLOYEES_TO_MONITOR = [
