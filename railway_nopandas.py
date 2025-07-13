@@ -204,6 +204,10 @@ def check_device_19_attendance():
                 if emp_code not in first_punches or log_date < first_punches[emp_code]['LogDate']:
                     first_punches[emp_code] = record
             
+            # Check for late arrivals and log first punch times
+            current_time = current_dt.time()
+            late_employees = []
+            
             for emp_code, record in first_punches.items():
                 first_time = record['LogDate']
                 
@@ -211,6 +215,83 @@ def check_device_19_attendance():
                 emp_details = next((emp for emp in EMPLOYEES_TO_MONITOR if emp['code'] == emp_code), None)
                 if emp_details:
                     logger.info(f"✅ {emp_details['name']} (Code: {emp_code}) - First IN: {first_time.strftime('%H:%M:%S')}")
+                    
+                    # Check if this employee is late
+                    expected_time = datetime.strptime(emp_details['expected_in'], '%H:%M:%S').time()
+                    actual_time = first_time.time()
+                    
+                    if actual_time > expected_time:
+                        late_employees.append({
+                            'code': emp_code,
+                            'name': emp_details['name'],
+                            'machine': emp_details['machine'],
+                            'expected_in': emp_details['expected_in'],
+                            'actual_in': first_time.strftime('%H:%M:%S')
+                        })
+                        logger.warning(f"🔴 LATE: {emp_details['name']} (Code: {emp_code}) - Expected: {emp_details['expected_in']}, Actual: {first_time.strftime('%H:%M:%S')}")
+            
+            # Check for employees who haven't arrived yet
+            for emp in EMPLOYEES_TO_MONITOR:
+                if emp['code'] not in first_punches:
+                    expected_time = datetime.strptime(emp['expected_in'], '%H:%M:%S').time()
+                    if current_time > expected_time:
+                        late_employees.append({
+                            'code': emp['code'],
+                            'name': emp['name'],
+                            'machine': emp['machine'],
+                            'expected_in': emp['expected_in'],
+                            'actual_in': 'NOT ARRIVED'
+                        })
+                        logger.warning(f"🔴 ABSENT/LATE: {emp['name']} (Code: {emp['code']}) - Expected: {emp['expected_in']}, Status: NOT ARRIVED")
+            
+            # Send email alert if there are late employees
+            if late_employees:
+                logger.warning(f"📧 Late employees found: {len(late_employees)} employees")
+                
+                subject = f"🚨 Late Arrival Alert - Device 19 - {today}"
+                body = f"""
+                <html>
+                <body>
+                <h2>🚨 Late Employee Alert - {COMPANY_NAME}</h2>
+                <p><strong>Date:</strong> {today}</p>
+                <p><strong>Time:</strong> {current_dt.strftime('%H:%M:%S')}</p>
+                <p><strong>Device:</strong> Device 19</p>
+                
+                <h3>Late Employees ({len(late_employees)}):</h3>
+                <table border="1" style="border-collapse: collapse; width: 100%;">
+                    <tr style="background-color: #f0f0f0;">
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Machine</th>
+                        <th>Expected Time</th>
+                        <th>Actual Time</th>
+                    </tr>
+                """
+                
+                for emp in late_employees:
+                    body += f"""
+                    <tr>
+                        <td>{emp['code']}</td>
+                        <td>{emp['name']}</td>
+                        <td>{emp['machine']}</td>
+                        <td>{emp['expected_in']}</td>
+                        <td>{emp['actual_in']}</td>
+                    </tr>
+                    """
+                
+                body += """
+                </table>
+                <p><em>This is an automated alert from the Device 19 Attendance Monitor.</em></p>
+                </body>
+                </html>
+                """
+                
+                if send_email_alert(subject, body):
+                    logger.info(f"✅ Email alert sent successfully to {ALERT_EMAIL}")
+                else:
+                    logger.error(f"❌ Failed to send email alert")
+            else:
+                logger.info("✅ All employees arrived on time - no email alert needed")
         
         cursor.close()
         
