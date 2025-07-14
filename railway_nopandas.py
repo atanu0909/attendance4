@@ -36,16 +36,16 @@ GMAIL_PASSWORD = os.getenv('GMAIL_PASSWORD', 'oqahvqkuaziufvfb')
 COMPANY_NAME = os.getenv('COMPANY_NAME', 'Stylo Media Pvt Ltd')
 ALERT_EMAIL = os.getenv('ALERT_EMAIL', 'aghosh09092004@gmail.com')
 
-# Employee configuration - UPDATED WITH ACTUAL SHIFT TIMES FROM DATABASE
+# Employee configuration - UPDATED WITH ACTUAL SHIFT TIMES AND EMAIL ADDRESSES
 EMPLOYEES_TO_MONITOR = [
-    {'code': '3', 'name': 'Swarup Mahapatra', 'machine': 'Ryobi 3', 'expected_in': '09:30:00'},
-    {'code': '595', 'name': 'Santanu Das', 'machine': 'Ryobi 3', 'expected_in': '09:00:00'},
-    {'code': '593', 'name': 'Rohit Kabiraj', 'machine': 'Ryobi 3', 'expected_in': '09:00:00'},
-    {'code': '695', 'name': 'Soumen Ghoshal', 'machine': 'Ryobi 2', 'expected_in': '09:00:00'},
-    {'code': '641', 'name': 'Souvik Ghosh', 'machine': 'Ryobi 2', 'expected_in': '08:30:00'},
-    {'code': '744', 'name': 'Manoj Maity', 'machine': 'Ryobi 2', 'expected_in': '08:30:00'},
-    {'code': '20', 'name': 'Bablu Rajak', 'machine': 'Flat Bed', 'expected_in': '09:30:00'},
-    {'code': '18', 'name': 'Somen Bhattacharjee', 'machine': 'Flat Bed', 'expected_in': '09:00:00'}
+    {'code': '3', 'name': 'Swarup Mahapatra', 'machine': 'Ryobi 3', 'expected_in': '09:30:00', 'email': 'swarup.mahapatra@stylo-media.com'},
+    {'code': '595', 'name': 'Santanu Das', 'machine': 'Ryobi 3', 'expected_in': '09:00:00', 'email': 'santanu.das@stylo-media.com'},
+    {'code': '593', 'name': 'Rohit Kabiraj', 'machine': 'Ryobi 3', 'expected_in': '09:00:00', 'email': 'rohit.kabiraj@stylo-media.com'},
+    {'code': '695', 'name': 'Soumen Ghoshal', 'machine': 'Ryobi 2', 'expected_in': '09:00:00', 'email': 'soumen.ghoshal@stylo-media.com'},
+    {'code': '641', 'name': 'Souvik Ghosh', 'machine': 'Ryobi 2', 'expected_in': '08:30:00', 'email': 'souvik.ghosh@stylo-media.com'},
+    {'code': '744', 'name': 'Manoj Maity', 'machine': 'Ryobi 2', 'expected_in': '08:30:00', 'email': 'manoj.maity@stylo-media.com'},
+    {'code': '20', 'name': 'Bablu Rajak', 'machine': 'Flat Bed', 'expected_in': '09:30:00', 'email': 'bablu.rajak@stylo-media.com'},
+    {'code': '18', 'name': 'Somen Bhattacharjee', 'machine': 'Flat Bed', 'expected_in': '09:00:00', 'email': 'somen.bhattacharjee@stylo-media.com'}
 ]
 
 # Daily notification tracking (reset each day)
@@ -82,7 +82,7 @@ def get_db_connection():
         return None
 
 def send_email_alert(subject, body):
-    """Send email alert"""
+    """Send email alert to management"""
     if not EMAIL_ENABLED:
         logger.info("Email notifications disabled")
         return False
@@ -106,6 +106,157 @@ def send_email_alert(subject, body):
     except Exception as e:
         logger.error(f"❌ Failed to send email: {e}")
         return False
+
+def send_individual_late_email(employee):
+    """Send personalized late arrival email to individual employee"""
+    if not EMAIL_ENABLED:
+        logger.info("Email notifications disabled")
+        return False
+    
+    try:
+        current_dt = datetime.now()
+        today = current_dt.strftime('%Y-%m-%d')
+        
+        subject = f"⏰ Late Arrival Notice - {today}"
+        
+        # Create personalized email body
+        body = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; margin: 20px;">
+            <div style="border-left: 4px solid #ff6b6b; padding-left: 20px;">
+                <h2 style="color: #ff6b6b;">⏰ Late Arrival Notice</h2>
+            </div>
+            
+            <p>Dear <strong>{employee['name']}</strong>,</p>
+            
+            <p>This is to inform you that you arrived late today.</p>
+            
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #333;">Attendance Details:</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Employee Code:</strong></td>
+                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">{employee['code']}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Date:</strong></td>
+                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">{today}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Machine Assignment:</strong></td>
+                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">{employee['machine']}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Expected Arrival Time:</strong></td>
+                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">{employee['expected_in']}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;"><strong>Actual Arrival Time:</strong></td>
+                        <td style="padding: 8px;">{employee.get('actual_in', 'Not yet arrived')}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <h4 style="margin-top: 0; color: #856404;">📋 Reminder:</h4>
+                <p style="margin-bottom: 0;">Please ensure to arrive on time to maintain productivity and team coordination. If you have any ongoing issues affecting your punctuality, please discuss with your supervisor.</p>
+            </div>
+            
+            <p>Thank you for your attention to this matter.</p>
+            
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+            <div style="color: #666; font-size: 12px;">
+                <p><strong>{COMPANY_NAME}</strong><br>
+                HR Department<br>
+                <em>This is an automated notice from the Attendance Monitoring System.</em></p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        msg = MIMEMultipart()
+        msg['From'] = GMAIL_USER
+        msg['To'] = employee['email']
+        msg['Subject'] = subject
+        
+        msg.attach(MIMEText(body, 'html'))
+        
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(GMAIL_USER, GMAIL_PASSWORD)
+            server.send_message(msg)
+        
+        logger.info(f"✅ Individual late notice sent to {employee['name']} ({employee['email']})")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to send individual email to {employee['name']}: {e}")
+        return False
+
+def send_management_summary_email(late_employees, today):
+    """Send summary email to management with all late employees"""
+    if not late_employees:
+        return True
+        
+    subject = f"📊 Daily Late Arrival Summary - Device 19 - {today}"
+    
+    body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; margin: 20px;">
+        <div style="border-left: 4px solid #007bff; padding-left: 20px;">
+            <h2 style="color: #007bff;">📊 Daily Late Arrival Summary</h2>
+        </div>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Summary Information:</h3>
+            <p><strong>Company:</strong> {COMPANY_NAME}</p>
+            <p><strong>Date:</strong> {today}</p>
+            <p><strong>Device:</strong> Device 19</p>
+            <p><strong>Total Late Employees:</strong> {len(late_employees)}</p>
+            <p><strong>Report Generated:</strong> {datetime.now().strftime('%H:%M:%S')}</p>
+        </div>
+        
+        <h3>Late Employees Details:</h3>
+        <table border="1" style="border-collapse: collapse; width: 100%; background-color: white;">
+            <tr style="background-color: #007bff; color: white;">
+                <th style="padding: 12px; text-align: left;">Code</th>
+                <th style="padding: 12px; text-align: left;">Name</th>
+                <th style="padding: 12px; text-align: left;">Machine</th>
+                <th style="padding: 12px; text-align: left;">Expected Time</th>
+                <th style="padding: 12px; text-align: left;">Actual Time</th>
+                <th style="padding: 12px; text-align: left;">Email Sent</th>
+            </tr>
+    """
+    
+    for emp in late_employees:
+        body += f"""
+        <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px;">{emp['code']}</td>
+            <td style="padding: 10px;">{emp['name']}</td>
+            <td style="padding: 10px;">{emp['machine']}</td>
+            <td style="padding: 10px;">{emp['expected_in']}</td>
+            <td style="padding: 10px;">{emp.get('actual_in', 'Not arrived')}</td>
+            <td style="padding: 10px;">✅ Yes</td>
+        </tr>
+        """
+    
+    body += """
+        </table>
+        
+        <div style="background-color: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #155724;">📧 Action Taken:</h4>
+            <p style="margin-bottom: 0;">Individual late arrival notices have been sent to all late employees' email addresses automatically.</p>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+        <div style="color: #666; font-size: 12px;">
+            <p><em>This is an automated report from the Device 19 Attendance Monitor.</em></p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return send_email_alert(subject, body)
 
 def reset_daily_notifications(today):
     """Reset daily notification tracking for a new day"""
@@ -195,43 +346,18 @@ def check_device_19_attendance():
             if new_late_employees:
                 logger.warning(f"🚨 {len(new_late_employees)} NEW late employees detected!")
                 
-                # Send email alert only for new late employees
-                subject = f"🚨 LATE ALERT - Device 19 Attendance - {today}"
-                body = f"""
-                <h2>🚨 Late Employee Alert - {COMPANY_NAME}</h2>
-                <p><strong>Date:</strong> {today}</p>
-                <p><strong>Time:</strong> {current_dt.strftime('%H:%M:%S')}</p>
-                <p><strong>Device:</strong> Device 19</p>
-                
-                <h3>Late Employees:</h3>
-                <table border="1" style="border-collapse: collapse; width: 100%;">
-                    <tr style="background-color: #f0f0f0;">
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Machine</th>
-                        <th>Expected Time</th>
-                    </tr>
-                """
-                
+                # Send individual emails to each late employee
+                emails_sent = 0
                 for emp in new_late_employees:
-                    body += f"""
-                    <tr>
-                        <td>{emp['code']}</td>
-                        <td>{emp['name']}</td>
-                        <td>{emp['machine']}</td>
-                        <td>{emp['expected_in']}</td>
-                    </tr>
-                    """
-                
-                body += """
-                </table>
-                <p><em>This is an automated alert from the Device 19 Attendance Monitor.</em></p>
-                """
-                
-                if send_email_alert(subject, body):
-                    # Mark these employees as notified
-                    for emp in new_late_employees:
+                    if send_individual_late_email(emp):
+                        emails_sent += 1
                         mark_employee_notified(emp['code'])
+                
+                logger.info(f"📧 Sent {emails_sent} individual late notices")
+                
+                # Also send summary to management
+                if emails_sent > 0:
+                    send_management_summary_email(new_late_employees, today)
                         
             elif late_employees:
                 logger.info(f"📋 {len(late_employees)} employees are late, but already notified today")
@@ -306,51 +432,20 @@ def check_device_19_attendance():
             if new_late_employees:
                 logger.warning(f"📧 NEW Late employees found: {len(new_late_employees)} employees")
                 
-                subject = f"🚨 Late Arrival Alert - Device 19 - {today}"
-                body = f"""
-                <html>
-                <body>
-                <h2>🚨 Late Employee Alert - {COMPANY_NAME}</h2>
-                <p><strong>Date:</strong> {today}</p>
-                <p><strong>Time:</strong> {current_dt.strftime('%H:%M:%S')}</p>
-                <p><strong>Device:</strong> Device 19</p>
-                
-                <h3>Late Employees ({len(new_late_employees)}):</h3>
-                <table border="1" style="border-collapse: collapse; width: 100%;">
-                    <tr style="background-color: #f0f0f0;">
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Machine</th>
-                        <th>Expected Time</th>
-                        <th>Actual Time</th>
-                    </tr>
-                """
-                
+                # Send individual emails to each late employee
+                emails_sent = 0
                 for emp in new_late_employees:
-                    body += f"""
-                    <tr>
-                        <td>{emp['code']}</td>
-                        <td>{emp['name']}</td>
-                        <td>{emp['machine']}</td>
-                        <td>{emp['expected_in']}</td>
-                        <td>{emp['actual_in']}</td>
-                    </tr>
-                    """
-                
-                body += """
-                </table>
-                <p><em>This is an automated alert from the Device 19 Attendance Monitor.</em></p>
-                </body>
-                </html>
-                """
-                
-                if send_email_alert(subject, body):
-                    # Mark these employees as notified
-                    for emp in new_late_employees:
+                    if send_individual_late_email(emp):
+                        emails_sent += 1
                         mark_employee_notified(emp['code'])
-                    logger.info(f"✅ Email alert sent successfully to {ALERT_EMAIL}")
-                else:
-                    logger.error(f"❌ Failed to send email alert")
+                
+                logger.info(f"📧 Sent {emails_sent} individual late notices")
+                
+                # Also send summary to management
+                if emails_sent > 0:
+                    send_management_summary_email(new_late_employees, today)
+                    logger.info(f"✅ Management summary sent to {ALERT_EMAIL}")
+                    
             elif late_employees:
                 logger.info(f"📋 {len(late_employees)} employees are late, but already notified today")
             else:
