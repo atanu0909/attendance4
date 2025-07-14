@@ -36,17 +36,29 @@ GMAIL_PASSWORD = os.getenv('GMAIL_PASSWORD', 'oqahvqkuaziufvfb')
 COMPANY_NAME = os.getenv('COMPANY_NAME', 'Stylo Media Pvt Ltd')
 ALERT_EMAIL = os.getenv('ALERT_EMAIL', 'aghosh09092004@gmail.com')
 
-# Employee configuration - UPDATED WITH ACTUAL SHIFT TIMES AND EMAIL ADDRESSES
+# Employee configuration - WILL BE LOADED FROM DATABASE
 EMPLOYEES_TO_MONITOR = [
-    {'code': '3', 'name': 'Swarup Mahapatra', 'machine': 'Ryobi 3', 'expected_in': '09:30:00', 'email': 'swarup.mahapatra@stylo-media.com'},
-    {'code': '595', 'name': 'Santanu Das', 'machine': 'Ryobi 3', 'expected_in': '09:00:00', 'email': 'santanu.das@stylo-media.com'},
-    {'code': '593', 'name': 'Rohit Kabiraj', 'machine': 'Ryobi 3', 'expected_in': '09:00:00', 'email': 'rohit.kabiraj@stylo-media.com'},
-    {'code': '695', 'name': 'Soumen Ghoshal', 'machine': 'Ryobi 2', 'expected_in': '09:00:00', 'email': 'soumen.ghoshal@stylo-media.com'},
-    {'code': '641', 'name': 'Souvik Ghosh', 'machine': 'Ryobi 2', 'expected_in': '08:30:00', 'email': 'souvik.ghosh@stylo-media.com'},
-    {'code': '744', 'name': 'Manoj Maity', 'machine': 'Ryobi 2', 'expected_in': '08:30:00', 'email': 'manoj.maity@stylo-media.com'},
-    {'code': '20', 'name': 'Bablu Rajak', 'machine': 'Flat Bed', 'expected_in': '09:30:00', 'email': 'bablu.rajak@stylo-media.com'},
-    {'code': '18', 'name': 'Somen Bhattacharjee', 'machine': 'Flat Bed', 'expected_in': '09:00:00', 'email': 'somen.bhattacharjee@stylo-media.com'}
+    {'code': '3', 'name': 'Swarup Mahapatra', 'machine': 'Ryobi 3', 'expected_in': '09:30:00', 'email': None},
+    {'code': '595', 'name': 'Santanu Das', 'machine': 'Ryobi 3', 'expected_in': '09:00:00', 'email': None},
+    {'code': '593', 'name': 'Rohit Kabiraj', 'machine': 'Ryobi 3', 'expected_in': '09:00:00', 'email': None},
+    {'code': '695', 'name': 'Soumen Ghoshal', 'machine': 'Ryobi 2', 'expected_in': '09:00:00', 'email': None},
+    {'code': '641', 'name': 'Souvik Ghosh', 'machine': 'Ryobi 2', 'expected_in': '08:30:00', 'email': None},
+    {'code': '744', 'name': 'Manoj Maity', 'machine': 'Ryobi 2', 'expected_in': '08:30:00', 'email': None},
+    {'code': '20', 'name': 'Bablu Rajak', 'machine': 'Flat Bed', 'expected_in': '09:30:00', 'email': None},
+    {'code': '18', 'name': 'Somen Bhattacharjee', 'machine': 'Flat Bed', 'expected_in': '09:00:00', 'email': None}
 ]
+
+# Fallback email configuration if database doesn't have emails
+FALLBACK_EMAILS = {
+    '3': 'aghosh09092004@gmail.com',
+    '595': 'aghosh09092004@gmail.com',
+    '593': 'aghosh09092004@gmail.com',
+    '695': 'aghosh09092004@gmail.com',
+    '641': 'aghosh09092004@gmail.com',
+    '744': 'aghosh09092004@gmail.com',
+    '20': 'aghosh09092004@gmail.com',
+    '18': 'aghosh09092004@gmail.com'
+}
 
 # Daily notification tracking (reset each day)
 daily_notifications = {
@@ -81,6 +93,97 @@ def get_db_connection():
         logger.error(f"❌ Database connection failed: {e}")
         return None
 
+def load_employee_emails():
+    """Load employee email addresses from database"""
+    global EMPLOYEES_TO_MONITOR
+    
+    logger.info("📧 Loading employee email addresses from database...")
+    
+    conn = get_db_connection()
+    if not conn:
+        logger.warning("⚠️ Cannot load emails from database, using fallback emails")
+        apply_fallback_emails()
+        return
+    
+    try:
+        # Get employee codes
+        employee_codes = [emp['code'] for emp in EMPLOYEES_TO_MONITOR]
+        codes_str = "', '".join(employee_codes)
+        
+        # Query for employee emails
+        query = f"""
+        SELECT 
+            CAST(EmployeeCode as varchar) as EmployeeCode,
+            EmployeeName,
+            Email,
+            ContactNo
+        FROM dbo.Employees 
+        WHERE CAST(EmployeeCode as varchar) IN ('{codes_str}')
+        """
+        
+        cursor = conn.cursor(as_dict=True)
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        if results:
+            emails_loaded = 0
+            emails_missing = 0
+            
+            logger.info(f"✅ Found {len(results)} employee records in database")
+            
+            # Create email lookup
+            db_emails = {}
+            for emp in results:
+                code = emp['EmployeeCode']
+                email = emp.get('Email', '').strip() if emp.get('Email') else ''
+                name = emp.get('EmployeeName', '')
+                contact = emp.get('ContactNo', '')
+                
+                if email:
+                    db_emails[code] = email
+                    logger.info(f"📧 {name} ({code}): {email}")
+                    emails_loaded += 1
+                else:
+                    logger.warning(f"⚠️ {name} ({code}): No email in database")
+                    emails_missing += 1
+            
+            # Update EMPLOYEES_TO_MONITOR with database emails
+            for emp in EMPLOYEES_TO_MONITOR:
+                if emp['code'] in db_emails:
+                    emp['email'] = db_emails[emp['code']]
+                else:
+                    # Use fallback email
+                    emp['email'] = FALLBACK_EMAILS.get(emp['code'])
+                    logger.info(f"🔄 Using fallback email for {emp['name']} ({emp['code']}): {emp['email']}")
+            
+            logger.info(f"📊 Email loading summary:")
+            logger.info(f"   • Emails loaded from database: {emails_loaded}")
+            logger.info(f"   • Emails missing in database: {emails_missing}")
+            logger.info(f"   • Using fallback emails: {emails_missing}")
+            
+        else:
+            logger.warning("⚠️ No employee records found in database")
+            apply_fallback_emails()
+            
+        cursor.close()
+        conn.close()
+        
+    except Exception as e:
+        logger.error(f"❌ Error loading emails from database: {e}")
+        apply_fallback_emails()
+
+def apply_fallback_emails():
+    """Apply fallback email configuration"""
+    global EMPLOYEES_TO_MONITOR
+    
+    logger.info("🔄 Applying fallback email configuration...")
+    
+    for emp in EMPLOYEES_TO_MONITOR:
+        emp['email'] = FALLBACK_EMAILS.get(emp['code'])
+        logger.info(f"📧 {emp['name']} ({emp['code']}): {emp['email']}")
+    
+    logger.info("✅ Fallback emails applied successfully")
+
 def send_email_alert(subject, body):
     """Send email alert to management"""
     if not EMAIL_ENABLED:
@@ -111,6 +214,12 @@ def send_individual_late_email(employee):
     """Send personalized late arrival email to individual employee"""
     if not EMAIL_ENABLED:
         logger.info("Email notifications disabled")
+        return False
+    
+    # Check if employee has email address
+    email_address = employee.get('email')
+    if not email_address:
+        logger.warning(f"⚠️ No email address for {employee['name']} ({employee['code']}) - skipping individual email")
         return False
     
     try:
@@ -176,7 +285,7 @@ def send_individual_late_email(employee):
         
         msg = MIMEMultipart()
         msg['From'] = GMAIL_USER
-        msg['To'] = employee['email']
+        msg['To'] = email_address
         msg['Subject'] = subject
         
         msg.attach(MIMEText(body, 'html'))
@@ -186,7 +295,7 @@ def send_individual_late_email(employee):
             server.login(GMAIL_USER, GMAIL_PASSWORD)
             server.send_message(msg)
         
-        logger.info(f"✅ Individual late notice sent to {employee['name']} ({employee['email']})")
+        logger.info(f"✅ Individual late notice sent to {employee['name']} ({email_address})")
         return True
         
     except Exception as e:
@@ -505,6 +614,11 @@ class AttendanceMonitor:
         logger.info("🚀 Starting Device 19 Attendance Monitor on Railway (No Pandas)")
         logger.info(f"📅 Date: {datetime.now().strftime('%Y-%m-%d')}")
         logger.info(f"⏰ Time: {datetime.now().strftime('%H:%M:%S')}")
+        
+        # Load employee emails from database on startup
+        logger.info("🔧 Loading employee email configuration...")
+        load_employee_emails()
+        
         logger.info("🔧 Starting continuous monitoring...")
         
         while self.running:
