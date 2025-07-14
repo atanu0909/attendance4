@@ -48,6 +48,12 @@ EMPLOYEES_TO_MONITOR = [
     {'code': '18', 'name': 'Somen Bhattacharjee', 'machine': 'Flat Bed', 'expected_in': '09:00:00'}
 ]
 
+# Daily notification tracking (reset each day)
+daily_notifications = {
+    'date': None,
+    'notified_employees': set()
+}
+
 def get_db_connection():
     """Get database connection using pymssql"""
     try:
@@ -101,8 +107,36 @@ def send_email_alert(subject, body):
         logger.error(f"❌ Failed to send email: {e}")
         return False
 
+def reset_daily_notifications(today):
+    """Reset daily notification tracking for a new day"""
+    global daily_notifications
+    if daily_notifications['date'] != today:
+        logger.info(f"🔄 Resetting daily notifications for {today}")
+        daily_notifications = {
+            'date': today,
+            'notified_employees': set()
+        }
+
+def should_send_notification(employee_code, today):
+    """Check if we should send notification for this employee today"""
+    global daily_notifications
+    reset_daily_notifications(today)
+    
+    if employee_code in daily_notifications['notified_employees']:
+        logger.info(f"⏭️ Already notified about {employee_code} today - skipping")
+        return False
+    
+    return True
+
+def mark_employee_notified(employee_code):
+    """Mark an employee as notified for today"""
+    global daily_notifications
+    daily_notifications['notified_employees'].add(employee_code)
+    logger.info(f"✅ Marked {employee_code} as notified for today")
+
 def check_device_19_attendance():
     """Check attendance for Device 19 employees"""
+    global daily_notifications
     logger.info("🔍 Checking Device 19 attendance...")
     
     conn = get_db_connection()
@@ -147,16 +181,21 @@ def check_device_19_attendance():
             # Check if employees are late
             current_time = current_dt.time()
             late_employees = []
+            new_late_employees = []  # Only employees we haven't notified about yet
             
             for emp in EMPLOYEES_TO_MONITOR:
                 expected_time = datetime.strptime(emp['expected_in'], '%H:%M:%S').time()
                 if current_time > expected_time:
                     late_employees.append(emp)
+                    
+                    # Check if we should notify about this employee
+                    if should_send_notification(emp['code'], today):
+                        new_late_employees.append(emp)
             
-            if late_employees:
-                logger.warning(f"🚨 {len(late_employees)} employees are late!")
+            if new_late_employees:
+                logger.warning(f"🚨 {len(new_late_employees)} NEW late employees detected!")
                 
-                # Send email alert
+                # Send email alert only for new late employees
                 subject = f"🚨 LATE ALERT - Device 19 Attendance - {today}"
                 body = f"""
                 <h2>🚨 Late Employee Alert - {COMPANY_NAME}</h2>
@@ -174,7 +213,7 @@ def check_device_19_attendance():
                     </tr>
                 """
                 
-                for emp in late_employees:
+                for emp in new_late_employees:
                     body += f"""
                     <tr>
                         <td>{emp['code']}</td>
@@ -189,7 +228,13 @@ def check_device_19_attendance():
                 <p><em>This is an automated alert from the Device 19 Attendance Monitor.</em></p>
                 """
                 
-                send_email_alert(subject, body)
+                if send_email_alert(subject, body):
+                    # Mark these employees as notified
+                    for emp in new_late_employees:
+                        mark_employee_notified(emp['code'])
+                        
+            elif late_employees:
+                logger.info(f"📋 {len(late_employees)} employees are late, but already notified today")
             else:
                 logger.info("✅ No late employees detected")
         else:
@@ -207,6 +252,7 @@ def check_device_19_attendance():
             # Check for late arrivals and log first punch times
             current_time = current_dt.time()
             late_employees = []
+            new_late_employees = []  # Only employees we haven't notified about yet
             
             for emp_code, record in first_punches.items():
                 first_time = record['LogDate']
@@ -221,13 +267,19 @@ def check_device_19_attendance():
                     actual_time = first_time.time()
                     
                     if actual_time > expected_time:
-                        late_employees.append({
+                        late_emp = {
                             'code': emp_code,
                             'name': emp_details['name'],
                             'machine': emp_details['machine'],
                             'expected_in': emp_details['expected_in'],
                             'actual_in': first_time.strftime('%H:%M:%S')
-                        })
+                        }
+                        late_employees.append(late_emp)
+                        
+                        # Check if we should notify about this employee
+                        if should_send_notification(emp_code, today):
+                            new_late_employees.append(late_emp)
+                        
                         logger.warning(f"🔴 LATE: {emp_details['name']} (Code: {emp_code}) - Expected: {emp_details['expected_in']}, Actual: {first_time.strftime('%H:%M:%S')}")
             
             # Check for employees who haven't arrived yet
@@ -235,18 +287,24 @@ def check_device_19_attendance():
                 if emp['code'] not in first_punches:
                     expected_time = datetime.strptime(emp['expected_in'], '%H:%M:%S').time()
                     if current_time > expected_time:
-                        late_employees.append({
+                        late_emp = {
                             'code': emp['code'],
                             'name': emp['name'],
                             'machine': emp['machine'],
                             'expected_in': emp['expected_in'],
                             'actual_in': 'NOT ARRIVED'
-                        })
+                        }
+                        late_employees.append(late_emp)
+                        
+                        # Check if we should notify about this employee
+                        if should_send_notification(emp['code'], today):
+                            new_late_employees.append(late_emp)
+                        
                         logger.warning(f"🔴 ABSENT/LATE: {emp['name']} (Code: {emp['code']}) - Expected: {emp['expected_in']}, Status: NOT ARRIVED")
             
-            # Send email alert if there are late employees
-            if late_employees:
-                logger.warning(f"📧 Late employees found: {len(late_employees)} employees")
+            # Send email alert only for new late employees
+            if new_late_employees:
+                logger.warning(f"📧 NEW Late employees found: {len(new_late_employees)} employees")
                 
                 subject = f"🚨 Late Arrival Alert - Device 19 - {today}"
                 body = f"""
@@ -257,7 +315,7 @@ def check_device_19_attendance():
                 <p><strong>Time:</strong> {current_dt.strftime('%H:%M:%S')}</p>
                 <p><strong>Device:</strong> Device 19</p>
                 
-                <h3>Late Employees ({len(late_employees)}):</h3>
+                <h3>Late Employees ({len(new_late_employees)}):</h3>
                 <table border="1" style="border-collapse: collapse; width: 100%;">
                     <tr style="background-color: #f0f0f0;">
                         <th>Code</th>
@@ -268,7 +326,7 @@ def check_device_19_attendance():
                     </tr>
                 """
                 
-                for emp in late_employees:
+                for emp in new_late_employees:
                     body += f"""
                     <tr>
                         <td>{emp['code']}</td>
@@ -287,9 +345,14 @@ def check_device_19_attendance():
                 """
                 
                 if send_email_alert(subject, body):
+                    # Mark these employees as notified
+                    for emp in new_late_employees:
+                        mark_employee_notified(emp['code'])
                     logger.info(f"✅ Email alert sent successfully to {ALERT_EMAIL}")
                 else:
                     logger.error(f"❌ Failed to send email alert")
+            elif late_employees:
+                logger.info(f"📋 {len(late_employees)} employees are late, but already notified today")
             else:
                 logger.info("✅ All employees arrived on time - no email alert needed")
         
